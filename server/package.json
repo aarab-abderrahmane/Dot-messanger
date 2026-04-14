@@ -5,7 +5,13 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon server/server.js"
+    "dev": "nodemon server/server.js",
+    "dev:clean": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$port = if ($env:PORT) { [int]$env:PORT } else { 5000 }; $connections = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue; if ($connections) { $connections | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue; Write-Host ('Killed PID ' + $_ + ' on port ' + $port) } } else { Write-Host ('Port ' + $port + ' is free') }; npm run dev\"",
+    "db:up": "docker compose -f postgres/docker-compose.yml up -d",
+    "db:down": "docker compose -f postgres/docker-compose.yml down",
+    "db:logs": "docker compose -f postgres/docker-compose.yml logs -f postgres",
+    "db:check": "node server/scripts/checkPostgresConnection.js",
+    "db:migrate": "node server/scripts/migrateSqliteToPostgres.js"
   },
   "keywords": [],
   "author": "",
@@ -14,6 +20,7 @@
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "pg": "^8.16.3",
     "uuid": "^13.0.0",
     "ws": "^8.19.0",
     "zod": "^4.3.6"

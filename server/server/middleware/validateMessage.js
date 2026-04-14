@@ -6,6 +6,7 @@ const MAX_VOICE_SIZE = 1 * 1024 * 1024; // 1MB (Voice clips should be smaller)
 // Constants
 const MAX_PDF_SIZE = 2 * 1024 * 1024; // 2MB per file
 const MAX_ATTACHMENTS = 3; // Max files allowed
+const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB per file for generic attachments
 
 
 /**
@@ -94,8 +95,43 @@ function validatePdfMessage(data) {
     const fileSize = (base64Data.length * 3) / 4;
     if (fileSize > MAX_PDF_SIZE) return false;
 
-    // Sanitize Filename (Remove dangerous characters)
+    // Sanitize Filename (O'chirish dangerous characters)
     file.name = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+  }
+
+  return true;
+}
+
+function validateGenericFileMessage(data) {
+  if (!Array.isArray(data.attachments) || data.attachments.length === 0) {
+    return false;
+  }
+
+  if (data.attachments.length > MAX_ATTACHMENTS) {
+    return false;
+  }
+
+  for (const file of data.attachments) {
+    if (!file.name || !file.content) return false;
+    if (typeof file.name !== "string" || typeof file.content !== "string") return false;
+    if (file.content.startsWith("/MV/files/")) {
+      file.name = file.name.replace(/[^a-zA-Z0-9.\-_ ]/g, "_").slice(0, 120);
+      continue;
+    }
+    // Accept any file type (zip/rar/7z/exe/etc.) as long as payload is a valid base64 data URL.
+    const payload = file.content.trim();
+    if (!payload.startsWith("data:")) return false;
+    const base64MarkerIndex = payload.indexOf(";base64,");
+    if (base64MarkerIndex < 0) return false;
+
+    const base64Data = payload.slice(base64MarkerIndex + ";base64,".length);
+    if (!base64Data) return false;
+    if (!/^[A-Za-z0-9+/=\r\n]+$/.test(base64Data)) return false;
+
+    const fileSize = (base64Data.length * 3) / 4;
+    if (fileSize > MAX_FILE_SIZE) return false;
+
+    file.name = file.name.replace(/[^a-zA-Z0-9.\-_ ]/g, "_").slice(0, 120);
   }
 
   return true;
@@ -103,7 +139,7 @@ function validatePdfMessage(data) {
 
 
 
-const allowedStickers = [
+const allowedStikerlar = [
   '/assets/stickers/STK-20250901-WA0000.png',
   '/assets/stickers/STK-20250916-WA0009.png',
   '/assets/stickers/STK-20250918-WA0002.png',
@@ -119,7 +155,7 @@ const allowedStickers = [
 
 function validateStickerMessage(data){
 
-    if (allowedStickers.includes(data.content)){
+    if (allowedStikerlar.includes(data.content)){
       return true
     }
 
@@ -134,5 +170,6 @@ module.exports = {
   validateImageMessage,
   validateVoiceMessage ,
   validatePdfMessage,
+  validateGenericFileMessage,
   validateStickerMessage
 };

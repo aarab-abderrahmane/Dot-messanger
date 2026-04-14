@@ -1,11 +1,11 @@
 require("dotenv").config();
 
-const MAX_TOKENS = process.env.MAX_TOKENS ; 
-const TOKEN_REFILL_RATE = process.env.TOKEN_REFILL_RATE ; 
+const MAX_TOKENS = Number(process.env.MAX_TOKENS ?? 10);
+const TOKEN_REFILL_RATE = Number(process.env.TOKEN_REFILL_RATE ?? 2);
 
 const REFILL_INTERVAL_MS = TOKEN_REFILL_RATE * 60 * 1000;
 
-function canSend(client) {
+function canYuborish(client) {
   const now = Date.now();
 
   if (client.tokens === undefined) {
@@ -31,4 +31,4 @@ function canSend(client) {
   return true;
 }
 
-module.exports = { canSend };
+module.exports = { canYuborish };

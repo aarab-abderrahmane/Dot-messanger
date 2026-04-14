@@ -1,0 +1,12 @@
+{
+  "watch": ["server"],
+  "ext": "js,mjs,cjs,json",
+  "ignore": [
+    "data/**",
+    "server/data/**",
+    "**/*.sqlite",
+    "**/*.sqlite-wal",
+    "**/*.sqlite-shm"
+  ],
+  "delay": "250"
+}

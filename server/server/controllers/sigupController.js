@@ -1,5 +1,5 @@
-const {addUser} = require('../memory/userStore')
-const {brodcastUserStates} = require('../services/broadcastService')
+const { addUser, toPublicUser: toPublicSignUpUser } = require("../memory/userStore");
+const { t } = require("../utils/i18n");
 
 
 function signUp (req, res) {
@@ -9,36 +9,30 @@ function signUp (req, res) {
 
 
   if (!email  || !avatar || !password || !username) {
-    return res.status(400).json({ error: "All fields are required !" });
+    return res.status(400).json({ error: t(req, "requiredFields") });
   }
 
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailPattern.test(email)) {
-    return res.status(400).json({ error: "Please enter a valid email address." });
+    return res.status(400).json({ error: t(req, "invalidEmail") });
   }
 
   const usernamePattern = /^[a-zA-Z0-9_]{3,15}$/;
   if (!usernamePattern.test(username)) {
     return res.status(400).json({ 
-      error: "Username must be 3-15 characters and contain only letters, numbers, or underscores." 
+      error: t(req, "invalidUsername")
     });
   }
 
   const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;
   if (!passwordPattern.test(password)) {
     return res.status(400).json({ 
-      error: "Password must be at least 8 characters long, including one uppercase letter and one number." 
+      error: t(req, "invalidPassword")
     });
   }
 
   const response = addUser(email, ip , avatar  ,password , username);
-
-  // if (!response.error) {
-  //   brodcastUserStates()
-  //   return res.json(response); // contains token, email
-  // }
-
-  return res.json(response);
+  return res.json(toPublicSignUpUser(response));
 }
 
-module.exports = {signUp}
+module.exports = {signUp};

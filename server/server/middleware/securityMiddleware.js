@@ -1,9 +1,8 @@
-const { MAX_MESSAGE_LENGTH } = require('./config')
-
-function validateMessage(data) {
-  if (!data.type || !data.message) return false
-  if (data.message.length > MAX_MESSAGE_LENGTH) return false
-  return true
+function securityMiddleware(req, res, next) {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "no-referrer");
+  next();
 }
 
-module.exports = { validateMessage }
+module.exports = { securityMiddleware };
