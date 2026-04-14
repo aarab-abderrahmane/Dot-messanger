@@ -1,48 +1,30 @@
-const {getUserByEmail,usersByToken,usersByEmail} = require('../memory/userStore')
-const { v4: uuidv4 } = require('uuid');
+const {
+  getUserByEmail,
+  verifyPassword: verifySignInPassword,
+  toPublicUser: toPublicSignInUser,
+  rotateUserToken
+} = require("../memory/userStore");
+const { t } = require("../utils/i18n");
 
 
 function signIn(req, res) {
 
     const { email, password } = req.body;
-    const ip = req.ip;
 
     const user = getUserByEmail(email);
 
     if (!user) {
-        return res.status(400).json({ error: "email or password incorrect" });
+        return res.status(400).json({ error: t(req, "invalidCredentials") });
     }
 
-    if (user.ip !== ip) {
+    if (!verifySignInPassword(password, user.password)) {
         return res.status(400).json({
-            error: "blocked: different IP"
+            error: t(req, "invalidCredentials")
         });
     }
 
-    if (password !== user.password) {
-        return res.status(400).json({
-            error: "email or password incorrect"
-        });
-    }
-
-    let new_token;
-    do {
-        new_token = uuidv4();
-    } while (usersByToken.has(new_token));
-
-    usersByToken.delete(user.token);
-    const updatedUser = { ...user, token: new_token };
-
-    usersByEmail.set(user.email, updatedUser);
-    usersByToken.set(new_token, updatedUser);
-    usersByToken.delete(user.token);
-
-    return res.json({
-            username : user.username , 
-            token : new_token , 
-            email : user.email , 
-            avatar : user.avatar 
-    });
+    const updatedUser = rotateUserToken(user);
+    return res.json(toPublicSignInUser(updatedUser));
 }
 
-module.exports = {signIn}
+module.exports = {signIn};

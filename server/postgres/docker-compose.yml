@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: dot_messenger_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${PGUSER:-dot_admin}
+      POSTGRES_PASSWORD: ${PGPASSWORD:-DotMess_2026_local_pg_secure}
+      POSTGRES_DB: ${PGDATABASE:-dot_messenger}
+    ports:
+      - "${PGPORT:-55432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${PGUSER:-dot_admin} -d ${PGDATABASE:-dot_messenger}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
